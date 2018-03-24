@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+    <style>
+        table,
+        th,
+        td {
+            border: 1px solid grey;
+            border-collapse: collapse;
+            padding: 5px;
+        }
+        
+        table tr:nth-child(odd) {
+            background-color: #f1f1f1;
+        }
+        
+        table tr:nth-child(even) {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div ng-app="myApp" ng-controller="appcntrl" ng-init="count=0;switch=false">
+        <tag-header></tag-header>
+        <p>
+            <h1 ng-show="4-count!=0">You can Add {{4-count}} people
+            </h1>
+            <h1 ng-show="4-count==0">HouseFull
+            </h1>
+        </p>
+        <div ng-form="myform">First name:<input type=text ng-model="fname" /><br/> Last name:<input type=text ng-model="lname" /><br/> Age: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp<input type="number" ng-model="age" /> <br/>Location: &nbsp;
+            <input type=text ng-model="locate" /><br/>
+            <button ng-click="callsave()" ng-disabled="switch">Save</button></div>
+        <div>
+            <tag-header-curr></tag-header-curr>
+            <p>{{person}}</p>
+        </div>
+
+        <div>
+            <tag-header-all></tag-header-all>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Location</th>
+                </tr>
+                <tr ng-repeat="x in display|orderBy:'location'">
+                    <td>{{ x.name }}</td>
+                    <td>{{ x.age }}</td>
+                    <td>{{ x.location }}</td>
+
+                </tr>
+            </table>
+
+        </div>
+
+        <div ng-controller="searchCtrl">
+            <tag-search></tag-search>
+            <p>Type a letter in the input field:</p>
+            <p><input type="text" ng-model="place" ng-change="serachplace()"></p>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Location</th>
+                </tr>
+                <tr ng-repeat="x in filteredDisp1">
+                    <td>{{ x.name }}</td>
+                    <td>{{ x.age }}</td>
+                    <td>{{ x.location }}</td>
+                </tr>
+            </table>
+            <p>{{filteredDisp}}</p>
+        </div>
+    </div>
+
+    <script>
+        var app = angular.module("myApp", []);
+        var arr = [];
+        app.directive("tagHeader", function() {
+            return {
+                template: "<h1>My First APP</h1>"
+            }
+        })
+        app.directive("tagHeaderCurr", function() {
+            return {
+                template: "<h1>Newly Added Person</h1>"
+            }
+        })
+        app.directive("tagHeaderAll", function() {
+            return {
+                template: "<h1>Display All Persons</h1>"
+            }
+        })
+        app.directive("tagSearch", function() {
+            return {
+                template: "<h1>Search</h1>"
+            }
+        })
+        app.controller("appcntrl", function($scope, $http) {
+
+            $scope.callsave = function() {
+                $scope.person = {
+                    name: $scope.fname + " " + $scope.lname,
+                    age: $scope.age,
+                    location: $scope.locate
+                }
+
+                console.log($scope.count)
+                if ($scope.count == 3) {
+                    $scope.switch = 'true';
+                }
+                console.log($scope.switch)
+                $scope.count = $scope.count + 1;
+                arr.push($scope.person)
+                console.log(arr);
+                $http.post('/saveData', arr).then(function(response) {
+                    $scope.myWelcome = response;
+                });
+            }
+
+            $http.get('/intialdata').then(function(responsedata) {
+
+                for (obj in responsedata.data) {
+                    arr.push(responsedata.data[obj]);
+                }
+                console.log(arr);
+            })
+
+            $scope.display = arr;
+        })
+
+        app.controller('searchCtrl', function($scope) {
+
+            $scope.serachplace = function() {
+                filteredDisp = [];
+                // console.log($scope.display);
+                for (x in $scope.display) {
+                    console.log($scope.display[x].location == $scope.place);
+                    if ($scope.display[x].location == $scope.place) {
+                        // console.log($scope.display[x]);
+                        filteredDisp.push($scope.display[x])
+                        console.log(filteredDisp);
+                    }
+                }
+                $scope.filteredDisp1 = filteredDisp;
+            }
+        })
+    </script>
+</body>
+
+
+</html>
